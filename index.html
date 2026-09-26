@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyFlix Vault</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+
+  <style>
+    :root {
+      --bg-black: #141414;
+      --card-bg: #181818;
+      --accent-red: #E50914;
+      --text-white: #ffffff;
+      --text-gray: #aaaaaa;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-black);
+      color: var(--text-white);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 50px;
+    }
+
+    #lockScreen {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .lock-box {
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+
+    .lock-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--accent-red);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .lock-subtitle {
+      color: var(--text-gray);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .lock-input {
+      width: 100%;
+      padding: 12px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 15px;
+      margin-bottom: 14px;
+      outline: none;
+    }
+
+    .lock-input:focus {
+      border-color: var(--accent-red);
+    }
+
+    .lock-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent-red);
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .lock-error {
+      color: #ff4747;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    #appContent {
+      display: none;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 40px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0.7) 70%, transparent 100%);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--accent-red);
+      letter-spacing: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    .hero {
+      padding: 30px 40px 20px;
+      border-bottom: 1px solid #222;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .hero p {
+      color: var(--text-gray);
+      font-size: 14px;
+    }
+
+    .container {
+      padding: 0 40px;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 6px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: scale(1.04);
+    }
+
+    .thumbnail-wrap {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      position: relative;
+    }
+
+    .thumbnail-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-info {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-gray);
+    }
+
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: #ff4747;
+      cursor: pointer;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-box {
+      background: #222;
+      width: 90%;
+      max-width: 420px;
+      padding: 24px;
+      border-radius: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-gray);
+      margin-bottom: 4px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      background: #111;
+      border: 1px solid #333;
+      color: #fff;
+      border-radius: 4px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="lockScreen">
+    <div class="lock-box">
+      <div class="lock-title">MYFLIX</div>
+      <div class="lock-subtitle">Encrypted Vault. Enter Passkey to Decrypt.</div>
+
+      <input
+        type="password"
+        id="passkeyInput"
+        class="lock-input"
+        placeholder="Passkey..."
+      />
+
+      <button class="lock-btn" onclick="unlockVault()">
+        Unlock Vault
+      </button>
+
+      <div id="lockError" class="lock-error">
+        Passkey tappu ra nayana! Try again.
+      </div>
+    </div>
+  </div>
+
+  <div id="appContent">
+
+    <header>
+      <div class="brand">MYFLIX</div>
+
+      <div class="header-actions">
+        <button class="btn btn-secondary" onclick="exportData()">
+          Backup Encrypted
+        </button>
+
+        <button class="btn btn-secondary" onclick="importData()">
+          Restore
+        </button>
+
+        <button class="btn btn-secondary" onclick="lockVault()">
+          Lock
+        </button>
+
+        <button class="btn btn-primary" onclick="openModal()">
+          + Add Video
+        </button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1>Private Vault</h1>
+      <p>Data encrypted with AES-256. Click thumbnail to stream on YouTube.</p>
+    </section>
+
+    <main class="container">
+      <div class="video-grid" id="videoGrid"></div>
+    </main>
+
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+
+    <div class="modal-box">
+
+      <h3 style="margin-bottom: 14px;">
+        Add New Video
+      </h3>
+
+      <div class="form-group">
+        <label>Video Title</label>
+
+        <input
+          type="text"
+          id="videoTitle"
+          placeholder="e.g. Unlisted Travel Reel"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>YouTube Link</label>
+
+        <input
+          type="text"
+          id="videoUrl"
+          placeholder="https://youtu.be/..."
+        />
+      </div>
+
+      <div class="modal-actions">
+
+        <button
+          class="btn btn-secondary"
+          onclick="closeModal()"
+        >
+          Cancel
+        </button>
+
+        <button
+          class="btn btn-primary"
+          onclick="saveVideo()"
+        >
+          Save Encrypted
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    const STORAGE_KEY = "myflix_encrypted_payload";
+
+    let activeKey = "";
+    let memoryVideos = [];
+
+    function extractVideoId(url) {
+
+      const match = url.trim().match(
+        /^.*(youtu.be\/|v\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+      );
+
+      return (match && match[2].length === 11)
+        ? match[2]
+        : null;
+    }
+
+    function unlockVault() {
+
+      const input =
+        document.getElementById("passkeyInput").value.trim();
+
+      const errBox =
+        document.getElementById("lockError");
+
+      if (!input) return;
+
+      const rawCipher =
+        localStorage.getItem(STORAGE_KEY);
+
+      if (!rawCipher) {
+
+        activeKey = input;
+        memoryVideos = [];
+
+        saveToEncryptedStorage();
+
+        showApp();
+
+        return;
+      }
+
+      try {
+
+        const bytes =
+          CryptoJS.AES.decrypt(rawCipher, input);
+
+        const decryptedStr =
+          bytes.toString(CryptoJS.enc.Utf8);
+
+        if (!decryptedStr) {
+          throw new Error("Decrypt fail");
+        }
+
+        memoryVideos =
+          JSON.parse(decryptedStr);
+
+        activeKey = input;
+
+        errBox.style.display = "none";
+
+        showApp();
+
+      } catch (e) {
+
+        errBox.style.display = "block";
+
+      }
+    }
+
+    function showApp() {
+
+      document.getElementById("lockScreen")
+        .style.display = "none";
+
+      document.getElementById("appContent")
+        .style.display = "block";
+
+      render();
+    }
+
+    function lockVault() {
+
+      activeKey = "";
+      memoryVideos = [];
+
+      document.getElementById("passkeyInput").value = "";
+
+      document.getElementById("appContent")
+        .style.display = "none";
+
+      document.getElementById("lockScreen")
+        .style.display = "flex";
+    }
+
+    function saveToEncryptedStorage() {
+
+      const payload =
+        JSON.stringify(memoryVideos);
+
+      const cipher =
+        CryptoJS.AES.encrypt(
+          payload,
+          activeKey
+        ).toString();
+
+      localStorage.setItem(
+        STORAGE_KEY,
+        cipher
+      );
+
+      render();
+    }
+
+    function render() {
+
+      const grid =
+        document.getElementById("videoGrid");
+
+      if (memoryVideos.length === 0) {
+
+        grid.innerHTML = `
+          <p style="color:#666;grid-column:1/-1;">
+            No videos yet. Click <b>+ Add Video</b>.
+          </p>
+        `;
+
+        return;
+      }
+
+      grid.innerHTML =
+        memoryVideos.map((v, i) => `
+
+          <div
+            class="card"
+            onclick="window.open('${v.url}', '_blank')"
+          >
+
+            <div class="thumbnail-wrap">
+
+              <img
+                src="${v.thumb}"
+                alt="${v.title}"
+              />
+
+            </div>
+
+            <div class="card-info">
+
+              <div class="card-title">
+                ${v.title}
+              </div>
+
+              <div class="card-meta">
+
+                <span>Unlisted</span>
+
+                <button
+                  class="delete-btn"
+                  onclick="deleteVideo(event, ${i})"
+                >
+                  Delete
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        `).join("");
+    }
+
+    function openModal() {
+
+      document.getElementById("videoTitle").value = "";
+      document.getElementById("videoUrl").value = "";
+
+      document.getElementById("modalOverlay")
+        .style.display = "flex";
+    }
+
+    function closeModal() {
+
+      document.getElementById("modalOverlay")
+        .style.display = "none";
+    }
+
+    function saveVideo() {
+
+      const title =
+        document.getElementById("videoTitle")
+          .value.trim();
+
+      const rawUrl =
+        document.getElementById("videoUrl")
+          .value.trim();
+
+      if (!title || !rawUrl) {
+        return alert("Rendoo mandatory!");
+      }
+
+      const vidId =
+        extractVideoId(rawUrl);
+
+      const finalUrl =
+        vidId
+          ? `https://www.youtube.com/watch?v=${vidId}`
+          : rawUrl;
+
+      const thumb =
+        vidId
+          ? `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`
+          : "";
+
+      memoryVideos.unshift({
+        title,
+        url: finalUrl,
+        thumb
+      });
+
+      saveToEncryptedStorage();
+
+      closeModal();
+    }
+
+    function deleteVideo(e, idx) {
+
+      e.stopPropagation();
+
+      if (confirm("Remove this video?")) {
+
+        memoryVideos.splice(idx, 1);
+
+        saveToEncryptedStorage();
+      }
+    }
+
+    function exportData() {
+
+      const cipher =
+        localStorage.getItem(STORAGE_KEY) || "";
+
+      const dl =
+        document.createElement("a");
+
+      dl.setAttribute(
+        "href",
+        "data:text/plain;charset=utf-8," +
+        encodeURIComponent(cipher)
+      );
+
+      dl.setAttribute(
+        "download",
+        "myflix_encrypted_vault.txt"
+      );
+
+      dl.click();
+    }
+
+    function importData() {
+
+      const input =
+        document.createElement("input");
+
+      input.type = "file";
+
+      input.onchange = (e) => {
+
+        const reader =
+          new FileReader();
+
+        reader.onload = (ev) => {
+
+          localStorage.setItem(
+            STORAGE_KEY,
+            ev.target.result.trim()
+          );
+
+          alert(
+            "Backup uploaded! Unlock chey active key tho."
+          );
+
+          lockVault();
+        };
+
+        reader.readAsText(
+          e.target.files[0]
+        );
+      };
+
+      input.click();
+    }
+
+    document
+      .getElementById("passkeyInput")
+      .addEventListener("keypress", (e) => {
+
+        if (e.key === "Enter") {
+          unlockVault();
+        }
+
+      });
+
+  </script>
+
+</body>
+</html>
