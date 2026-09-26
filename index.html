@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MyFlix - Personal Vault</title>
-
+  <title>MyFlix Vault</title>
   <style>
     :root {
       --bg-black: #141414;
@@ -55,7 +54,7 @@
     }
 
     .btn {
-      padding: 8px 14px;
+      padding: 8px 16px;
       border-radius: 4px;
       border: none;
       font-size: 13px;
@@ -230,11 +229,11 @@
       margin-top: 18px;
     }
 
-    .empty-state {
-      grid-column: 1 / -1;
+    .status-msg {
       text-align: center;
       padding: 60px 0;
       color: var(--text-gray);
+      grid-column: 1 / -1;
     }
   </style>
 </head>
@@ -245,17 +244,8 @@
     <div class="brand">MYFLIX</div>
 
     <div class="header-actions">
-      <button class="btn btn-secondary" onclick="exportData()">
-        Backup
-      </button>
-
-      <button class="btn btn-secondary" onclick="importData()">
-        Restore
-      </button>
-
-      <button class="btn btn-primary" onclick="openModal()">
-        + Add Video
-      </button>
+      <button class="btn btn-secondary" onclick="openTokenModal()">🔑 Key</button>
+      <button class="btn btn-primary" onclick="openModal()">+ Add Video</button>
     </div>
   </header>
 
@@ -263,57 +253,48 @@
 
     <div class="section-title">
       <span>Personal Unlisted Vault</span>
-
       <span
         id="videoCount"
         style="font-size: 13px; color: var(--text-gray);"
-      ></span>
+      >
+        Syncing...
+      </span>
     </div>
 
-    <div
-      class="video-grid"
-      id="videoGrid"
-    ></div>
+    <div class="video-grid" id="videoGrid">
+      <div class="status-msg">
+        Loading videos from GitHub...
+      </div>
+    </div>
 
   </main>
 
-  <div
-    class="modal-overlay"
-    id="modalOverlay"
-  >
+  <div class="modal-overlay" id="modalOverlay">
 
     <div class="modal-box">
 
       <h3 style="margin-bottom: 16px;">
-        Add Video
+        Add New Video
       </h3>
 
       <div class="form-group">
-
-        <label>
-          Video Title
-        </label>
+        <label>Video Title</label>
 
         <input
           type="text"
           id="videoTitle"
-          placeholder="e.g. My Project Edit"
+          placeholder="e.g. Unlisted Travel Clip"
         />
-
       </div>
 
       <div class="form-group">
-
-        <label>
-          YouTube Link
-        </label>
+        <label>YouTube Link</label>
 
         <input
           type="text"
           id="videoUrl"
           placeholder="https://youtu.be/..."
         />
-
       </div>
 
       <div class="modal-actions">
@@ -327,9 +308,65 @@
 
         <button
           class="btn btn-primary"
+          id="saveBtn"
           onclick="saveVideo()"
         >
-          Save
+          Save to Cloud
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="modal-overlay" id="tokenModal">
+
+    <div class="modal-box">
+
+      <h3 style="margin-bottom: 8px;">
+        GitHub Access Key
+      </h3>
+
+      <p
+        style="
+          font-size: 12px;
+          color: var(--text-gray);
+          margin-bottom: 14px;
+        "
+      >
+        Videos add/delete cheyadaniki nee Personal Access Token ikkada paste chey.
+        Idi ee device browser lone save untundi.
+      </p>
+
+      <div class="form-group">
+
+        <label>
+          Personal Access Token (ghp_...)
+        </label>
+
+        <input
+          type="password"
+          id="tokenInput"
+          placeholder="ghp_xxxxxxxxx"
+        />
+
+      </div>
+
+      <div class="modal-actions">
+
+        <button
+          class="btn btn-secondary"
+          onclick="closeTokenModal()"
+        >
+          Cancel
+        </button>
+
+        <button
+          class="btn btn-primary"
+          onclick="saveToken()"
+        >
+          Save Key
         </button>
 
       </div>
@@ -340,15 +377,16 @@
 
   <script>
 
-    const STORAGE_KEY = "myflix_permanent_db";
+    const GITHUB_USER = "sethumahesh20";
+    const GITHUB_REPO = "my-flix";
+    const FILE_PATH = "videos.json";
 
-    const defaultData = [
-      {
-        title: "Default Unlisted Setup",
-        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        thumb: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
-      }
-    ];
+    let cachedVideos = [];
+    let fileSha = "";
+
+    function getToken() {
+      return localStorage.getItem("myflix_gh_pat") || "";
+    }
 
     function extractVideoId(url) {
 
@@ -364,121 +402,224 @@
         : null;
     }
 
-    function loadVideos() {
+    async function fetchVideos() {
 
-      const saved =
-        localStorage.getItem(STORAGE_KEY);
-
-      if (!saved) {
-
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(defaultData)
-        );
-
-        return defaultData;
-      }
+      const grid =
+        document.getElementById("videoGrid");
 
       try {
 
-        return JSON.parse(saved);
+        const res = await fetch(
+          `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}?t=${Date.now()}`,
+          {
+            headers: getToken()
+              ? {
+                  "Authorization":
+                    `Bearer ${getToken()}`
+                }
+              : {}
+          }
+        );
 
-      } catch (e) {
+        if (!res.ok) {
+          throw new Error("Fetch failed");
+        }
 
-        return defaultData;
+        const data = await res.json();
+
+        fileSha = data.sha;
+
+        const decoded =
+          decodeURIComponent(
+            escape(atob(data.content))
+          );
+
+        cachedVideos =
+          JSON.parse(decoded || "[]");
+
+        render();
+
+      } catch (err) {
+
+        grid.innerHTML = `
+          <div class="status-msg">
+            Videos load avvatledu bro.
+            File create chesava check chesko
+            leda 🔑 Key button kotti token enter chey.
+          </div>
+        `;
       }
     }
 
     function render() {
 
-      const videos = loadVideos();
-
       const grid =
         document.getElementById("videoGrid");
 
       document.getElementById("videoCount")
-        .innerText = `${videos.length} Videos`;
+        .innerText =
+        `${cachedVideos.length} Videos`;
 
-      if (videos.length === 0) {
+      if (cachedVideos.length === 0) {
 
         grid.innerHTML = `
-          <div class="empty-state">
+          <div class="status-msg">
             No videos found.
-            Click <b>+ Add Video</b> to add one.
+            Click <b>+ Add Video</b>
+            to add your first unlisted stream.
           </div>
         `;
 
         return;
       }
 
-      grid.innerHTML = videos.map((v, i) => `
+      grid.innerHTML =
+        cachedVideos.map((v, i) => `
 
-        <div
-          class="card"
-          onclick="window.open('${v.url}', '_blank')"
-        >
+          <div
+            class="card"
+            onclick="window.open('${v.url}', '_blank')"
+          >
 
-          <div class="thumbnail-wrap">
+            <div class="thumbnail-wrap">
 
-            <img
-              src="${v.thumb}"
-              alt="${v.title}"
-            />
+              <img
+                src="${v.thumb}"
+                alt="${v.title}"
+              />
 
-            <div class="play-overlay">
-              ▶
+              <div class="play-overlay">
+                ▶
+              </div>
+
             </div>
 
-          </div>
+            <div class="card-info">
 
-          <div class="card-info">
-
-            <div
-              class="card-title"
-              title="${v.title}"
-            >
-              ${v.title}
-            </div>
-
-            <div class="card-meta">
-
-              <span>
-                Unlisted
-              </span>
-
-              <button
-                class="delete-btn"
-                onclick="deleteVideo(event, ${i})"
+              <div
+                class="card-title"
+                title="${v.title}"
               >
-                Delete
-              </button>
+                ${v.title}
+              </div>
+
+              <div class="card-meta">
+
+                <span>
+                  Unlisted
+                </span>
+
+                <button
+                  class="delete-btn"
+                  onclick="deleteVideo(event, ${i})"
+                >
+                  Delete
+                </button>
+
+              </div>
 
             </div>
 
           </div>
 
-        </div>
-
-      `).join("");
+        `).join("");
     }
 
-    function saveVideo() {
+    async function pushToGitHub(
+      newVideos,
+      commitMsg
+    ) {
+
+      const token = getToken();
+
+      if (!token) {
+
+        openTokenModal();
+
+        throw new Error(
+          "Token missing"
+        );
+      }
+
+      const content =
+        btoa(
+          unescape(
+            encodeURIComponent(
+              JSON.stringify(
+                newVideos,
+                null,
+                2
+              )
+            )
+          )
+        );
+
+      const res = await fetch(
+        `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`,
+        {
+          method: "PUT",
+
+          headers: {
+            "Authorization":
+              `Bearer ${token}`,
+
+            "Content-Type":
+              "application/json"
+          },
+
+          body: JSON.stringify({
+            message: commitMsg,
+            content: content,
+            sha: fileSha
+          })
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(
+          "Update failed"
+        );
+      }
+
+      const respData =
+        await res.json();
+
+      fileSha =
+        respData.content.sha;
+
+      cachedVideos =
+        newVideos;
+
+      render();
+    }
+
+    async function saveVideo() {
 
       const title =
-        document.getElementById("videoTitle")
-          .value.trim();
+        document.getElementById(
+          "videoTitle"
+        ).value.trim();
 
       const rawUrl =
-        document.getElementById("videoUrl")
-          .value.trim();
+        document.getElementById(
+          "videoUrl"
+        ).value.trim();
+
+      const saveBtn =
+        document.getElementById(
+          "saveBtn"
+        );
 
       if (!title || !rawUrl) {
 
-        alert(
-          "Title and URL rendu enter chey bro!"
+        return alert(
+          "Title & URL rendu enter chey bro!"
         );
+      }
 
-        return;
+      if (!getToken()) {
+
+        return openTokenModal();
       }
 
       const id =
@@ -494,148 +635,146 @@
           ? `https://img.youtube.com/vi/${id}/hqdefault.jpg`
           : "https://via.placeholder.com/320x180?text=No+Thumbnail";
 
-      const videos =
-        loadVideos();
+      saveBtn.innerText =
+        "Saving...";
 
-      videos.unshift({
-        title,
-        url,
-        thumb
-      });
+      saveBtn.disabled =
+        true;
 
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(videos)
-      );
+      const updated = [
+        {
+          title,
+          url,
+          thumb
+        },
+        ...cachedVideos
+      ];
 
-      closeModal();
+      try {
 
-      render();
+        await pushToGitHub(
+          updated,
+          `Add video: ${title}`
+        );
+
+        closeModal();
+
+      } catch (e) {
+
+        alert(
+          "Upload error! Token permissions check chesko bro."
+        );
+
+      } finally {
+
+        saveBtn.innerText =
+          "Save to Cloud";
+
+        saveBtn.disabled =
+          false;
+      }
     }
 
-    function deleteVideo(e, index) {
+    async function deleteVideo(
+      e,
+      idx
+    ) {
 
       e.stopPropagation();
 
-      if (confirm("Ee video delete cheyala?")) {
+      if (!getToken()) {
+        return openTokenModal();
+      }
 
-        const videos =
-          loadVideos();
+      if (
+        confirm(
+          "Ee video GitHub nunchi remove cheyala?"
+        )
+      ) {
 
-        videos.splice(index, 1);
+        const updated =
+          [...cachedVideos];
 
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(videos)
-        );
+        const removed =
+          updated.splice(idx, 1);
 
-        render();
+        try {
+
+          await pushToGitHub(
+            updated,
+            `Delete video: ${removed[0].title}`
+          );
+
+        } catch (e) {
+
+          alert(
+            "Delete fail aindi! Token correct ga unda?"
+          );
+        }
       }
     }
 
     function openModal() {
 
-      document.getElementById("videoTitle")
-        .value = "";
+      document.getElementById(
+        "videoTitle"
+      ).value = "";
 
-      document.getElementById("videoUrl")
-        .value = "";
+      document.getElementById(
+        "videoUrl"
+      ).value = "";
 
-      document.getElementById("modalOverlay")
-        .style.display = "flex";
+      document.getElementById(
+        "modalOverlay"
+      ).style.display = "flex";
     }
 
     function closeModal() {
 
-      document.getElementById("modalOverlay")
-        .style.display = "none";
+      document.getElementById(
+        "modalOverlay"
+      ).style.display = "none";
     }
 
-    function exportData() {
+    function openTokenModal() {
 
-      const data =
-        localStorage.getItem(STORAGE_KEY) || "[]";
+      document.getElementById(
+        "tokenInput"
+      ).value = getToken();
 
-      const blob =
-        new Blob(
-          [data],
-          { type: "application/json" }
+      document.getElementById(
+        "tokenModal"
+      ).style.display = "flex";
+    }
+
+    function closeTokenModal() {
+
+      document.getElementById(
+        "tokenModal"
+      ).style.display = "none";
+    }
+
+    function saveToken() {
+
+      const token =
+        document.getElementById(
+          "tokenInput"
+        ).value.trim();
+
+      if (token) {
+
+        localStorage.setItem(
+          "myflix_gh_pat",
+          token
         );
 
-      const a =
-        document.createElement("a");
+        closeTokenModal();
 
-      a.href =
-        URL.createObjectURL(blob);
-
-      a.download =
-        "myflix_videos.json";
-
-      a.click();
+        fetchVideos();
+      }
     }
 
-    function importData() {
-
-      const input =
-        document.createElement("input");
-
-      input.type = "file";
-      input.accept = ".json";
-
-      input.onchange = (e) => {
-
-        const file =
-          e.target.files[0];
-
-        const reader =
-          new FileReader();
-
-        reader.onload = (event) => {
-
-          try {
-
-            JSON.parse(
-              event.target.result
-            );
-
-            localStorage.setItem(
-              STORAGE_KEY,
-              event.target.result
-            );
-
-            render();
-
-            alert(
-              "Backup restored successfully!"
-            );
-
-          } catch(err) {
-
-            alert(
-              "Invalid JSON file!"
-            );
-          }
-        };
-
-        reader.readAsText(file);
-      };
-
-      input.click();
-    }
-
-    document
-      .getElementById("modalOverlay")
-      .addEventListener("click", (e) => {
-
-        if (
-          e.target.id === "modalOverlay"
-        ) {
-          closeModal();
-        }
-
-      });
-
-    render();
+    fetchVideos();
 
   </script>
 
