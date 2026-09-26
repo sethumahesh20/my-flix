@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MyFlix Vault</title>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+  <title>MyFlix - Personal Vault</title>
 
   <style>
     :root {
@@ -31,76 +29,6 @@
       padding-bottom: 50px;
     }
 
-    #lockScreen {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 20px;
-    }
-
-    .lock-box {
-      width: 100%;
-      max-width: 360px;
-      text-align: center;
-    }
-
-    .lock-title {
-      font-size: 32px;
-      font-weight: 900;
-      color: var(--accent-red);
-      letter-spacing: 2px;
-      margin-bottom: 8px;
-    }
-
-    .lock-subtitle {
-      color: var(--text-gray);
-      font-size: 14px;
-      margin-bottom: 24px;
-    }
-
-    .lock-input {
-      width: 100%;
-      padding: 12px;
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 4px;
-      color: #fff;
-      font-size: 15px;
-      margin-bottom: 14px;
-      outline: none;
-    }
-
-    .lock-input:focus {
-      border-color: var(--accent-red);
-    }
-
-    .lock-btn {
-      width: 100%;
-      padding: 12px;
-      background: var(--accent-red);
-      color: #fff;
-      font-weight: 700;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .lock-error {
-      color: #ff4747;
-      font-size: 13px;
-      margin-top: 10px;
-      display: none;
-    }
-
-    #appContent {
-      display: none;
-    }
-
     header {
       position: sticky;
       top: 0;
@@ -108,13 +36,14 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 18px 40px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0.7) 70%, transparent 100%);
+      padding: 16px 30px;
+      background: rgba(20, 20, 20, 0.95);
+      border-bottom: 1px solid #222;
       backdrop-filter: blur(10px);
     }
 
     .brand {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 900;
       color: var(--accent-red);
       letter-spacing: 2px;
@@ -126,7 +55,7 @@
     }
 
     .btn {
-      padding: 8px 16px;
+      padding: 8px 14px;
       border-radius: 4px;
       border: none;
       font-size: 13px;
@@ -140,35 +69,33 @@
       color: #fff;
     }
 
+    .btn-primary:hover {
+      background: #b80710;
+    }
+
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.12);
       color: #fff;
     }
 
-    .hero {
-      padding: 30px 40px 20px;
-      border-bottom: 1px solid #222;
-      margin-bottom: 24px;
-    }
-
-    .hero h1 {
-      font-size: 32px;
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
-
-    .hero p {
-      color: var(--text-gray);
-      font-size: 14px;
-    }
-
     .container {
-      padding: 0 40px;
+      padding: 30px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 20px;
+      margin-bottom: 20px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .video-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 20px;
     }
 
@@ -177,11 +104,15 @@
       border-radius: 6px;
       overflow: hidden;
       cursor: pointer;
-      transition: transform 0.2s ease;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid #252525;
     }
 
     .card:hover {
-      transform: scale(1.04);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.7);
+      border-color: #444;
     }
 
     .thumbnail-wrap {
@@ -195,6 +126,23 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
+    }
+
+    .play-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.35);
+      font-size: 24px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .card:hover .play-overlay {
+      opacity: 1;
     }
 
     .card-info {
@@ -225,23 +173,27 @@
       border: none;
       color: #ff4747;
       cursor: pointer;
+      font-size: 12px;
+    }
+
+    .delete-btn:hover {
+      text-decoration: underline;
     }
 
     .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(4px);
+      background: rgba(0,0,0,0.85);
       z-index: 200;
       align-items: center;
       justify-content: center;
     }
 
     .modal-box {
-      background: #222;
+      background: #202020;
       width: 90%;
-      max-width: 420px;
+      max-width: 400px;
       padding: 24px;
       border-radius: 8px;
     }
@@ -254,7 +206,7 @@
       display: block;
       font-size: 12px;
       color: var(--text-gray);
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     .form-group input {
@@ -266,100 +218,102 @@
       border-radius: 4px;
     }
 
+    .form-group input:focus {
+      border-color: var(--accent-red);
+      outline: none;
+    }
+
     .modal-actions {
       display: flex;
       justify-content: flex-end;
       gap: 8px;
       margin-top: 18px;
     }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 0;
+      color: var(--text-gray);
+    }
   </style>
 </head>
 
 <body>
 
-  <div id="lockScreen">
-    <div class="lock-box">
-      <div class="lock-title">MYFLIX</div>
-      <div class="lock-subtitle">Encrypted Vault. Enter Passkey to Decrypt.</div>
+  <header>
+    <div class="brand">MYFLIX</div>
 
-      <input
-        type="password"
-        id="passkeyInput"
-        class="lock-input"
-        placeholder="Passkey..."
-      />
-
-      <button class="lock-btn" onclick="unlockVault()">
-        Unlock Vault
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="exportData()">
+        Backup
       </button>
 
-      <div id="lockError" class="lock-error">
-        Passkey tappu ra nayana! Try again.
-      </div>
+      <button class="btn btn-secondary" onclick="importData()">
+        Restore
+      </button>
+
+      <button class="btn btn-primary" onclick="openModal()">
+        + Add Video
+      </button>
     </div>
-  </div>
+  </header>
 
-  <div id="appContent">
+  <main class="container">
 
-    <header>
-      <div class="brand">MYFLIX</div>
+    <div class="section-title">
+      <span>Personal Unlisted Vault</span>
 
-      <div class="header-actions">
-        <button class="btn btn-secondary" onclick="exportData()">
-          Backup Encrypted
-        </button>
+      <span
+        id="videoCount"
+        style="font-size: 13px; color: var(--text-gray);"
+      ></span>
+    </div>
 
-        <button class="btn btn-secondary" onclick="importData()">
-          Restore
-        </button>
+    <div
+      class="video-grid"
+      id="videoGrid"
+    ></div>
 
-        <button class="btn btn-secondary" onclick="lockVault()">
-          Lock
-        </button>
+  </main>
 
-        <button class="btn btn-primary" onclick="openModal()">
-          + Add Video
-        </button>
-      </div>
-    </header>
-
-    <section class="hero">
-      <h1>Private Vault</h1>
-      <p>Data encrypted with AES-256. Click thumbnail to stream on YouTube.</p>
-    </section>
-
-    <main class="container">
-      <div class="video-grid" id="videoGrid"></div>
-    </main>
-
-  </div>
-
-  <div class="modal-overlay" id="modalOverlay">
+  <div
+    class="modal-overlay"
+    id="modalOverlay"
+  >
 
     <div class="modal-box">
 
-      <h3 style="margin-bottom: 14px;">
-        Add New Video
+      <h3 style="margin-bottom: 16px;">
+        Add Video
       </h3>
 
       <div class="form-group">
-        <label>Video Title</label>
+
+        <label>
+          Video Title
+        </label>
 
         <input
           type="text"
           id="videoTitle"
-          placeholder="e.g. Unlisted Travel Reel"
+          placeholder="e.g. My Project Edit"
         />
+
       </div>
 
       <div class="form-group">
-        <label>YouTube Link</label>
+
+        <label>
+          YouTube Link
+        </label>
 
         <input
           type="text"
           id="videoUrl"
           placeholder="https://youtu.be/..."
         />
+
       </div>
 
       <div class="modal-actions">
@@ -375,7 +329,7 @@
           class="btn btn-primary"
           onclick="saveVideo()"
         >
-          Save Encrypted
+          Save
         </button>
 
       </div>
@@ -386,10 +340,15 @@
 
   <script>
 
-    const STORAGE_KEY = "myflix_encrypted_payload";
+    const STORAGE_KEY = "myflix_permanent_db";
 
-    let activeKey = "";
-    let memoryVideos = [];
+    const defaultData = [
+      {
+        title: "Default Unlisted Setup",
+        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        thumb: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+      }
+    ];
 
     function extractVideoId(url) {
 
@@ -397,180 +356,110 @@
         /^.*(youtu.be\/|v\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
       );
 
-      return (match && match[2].length === 11)
+      return (
+        match &&
+        match[2].length === 11
+      )
         ? match[2]
         : null;
     }
 
-    function unlockVault() {
+    function loadVideos() {
 
-      const input =
-        document.getElementById("passkeyInput").value.trim();
-
-      const errBox =
-        document.getElementById("lockError");
-
-      if (!input) return;
-
-      const rawCipher =
+      const saved =
         localStorage.getItem(STORAGE_KEY);
 
-      if (!rawCipher) {
+      if (!saved) {
 
-        activeKey = input;
-        memoryVideos = [];
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(defaultData)
+        );
 
-        saveToEncryptedStorage();
-
-        showApp();
-
-        return;
+        return defaultData;
       }
 
       try {
 
-        const bytes =
-          CryptoJS.AES.decrypt(rawCipher, input);
-
-        const decryptedStr =
-          bytes.toString(CryptoJS.enc.Utf8);
-
-        if (!decryptedStr) {
-          throw new Error("Decrypt fail");
-        }
-
-        memoryVideos =
-          JSON.parse(decryptedStr);
-
-        activeKey = input;
-
-        errBox.style.display = "none";
-
-        showApp();
+        return JSON.parse(saved);
 
       } catch (e) {
 
-        errBox.style.display = "block";
-
+        return defaultData;
       }
-    }
-
-    function showApp() {
-
-      document.getElementById("lockScreen")
-        .style.display = "none";
-
-      document.getElementById("appContent")
-        .style.display = "block";
-
-      render();
-    }
-
-    function lockVault() {
-
-      activeKey = "";
-      memoryVideos = [];
-
-      document.getElementById("passkeyInput").value = "";
-
-      document.getElementById("appContent")
-        .style.display = "none";
-
-      document.getElementById("lockScreen")
-        .style.display = "flex";
-    }
-
-    function saveToEncryptedStorage() {
-
-      const payload =
-        JSON.stringify(memoryVideos);
-
-      const cipher =
-        CryptoJS.AES.encrypt(
-          payload,
-          activeKey
-        ).toString();
-
-      localStorage.setItem(
-        STORAGE_KEY,
-        cipher
-      );
-
-      render();
     }
 
     function render() {
 
+      const videos = loadVideos();
+
       const grid =
         document.getElementById("videoGrid");
 
-      if (memoryVideos.length === 0) {
+      document.getElementById("videoCount")
+        .innerText = `${videos.length} Videos`;
+
+      if (videos.length === 0) {
 
         grid.innerHTML = `
-          <p style="color:#666;grid-column:1/-1;">
-            No videos yet. Click <b>+ Add Video</b>.
-          </p>
+          <div class="empty-state">
+            No videos found.
+            Click <b>+ Add Video</b> to add one.
+          </div>
         `;
 
         return;
       }
 
-      grid.innerHTML =
-        memoryVideos.map((v, i) => `
+      grid.innerHTML = videos.map((v, i) => `
 
-          <div
-            class="card"
-            onclick="window.open('${v.url}', '_blank')"
-          >
+        <div
+          class="card"
+          onclick="window.open('${v.url}', '_blank')"
+        >
 
-            <div class="thumbnail-wrap">
+          <div class="thumbnail-wrap">
 
-              <img
-                src="${v.thumb}"
-                alt="${v.title}"
-              />
+            <img
+              src="${v.thumb}"
+              alt="${v.title}"
+            />
 
+            <div class="play-overlay">
+              ▶
             </div>
 
-            <div class="card-info">
+          </div>
 
-              <div class="card-title">
-                ${v.title}
-              </div>
+          <div class="card-info">
 
-              <div class="card-meta">
+            <div
+              class="card-title"
+              title="${v.title}"
+            >
+              ${v.title}
+            </div>
 
-                <span>Unlisted</span>
+            <div class="card-meta">
 
-                <button
-                  class="delete-btn"
-                  onclick="deleteVideo(event, ${i})"
-                >
-                  Delete
-                </button>
+              <span>
+                Unlisted
+              </span>
 
-              </div>
+              <button
+                class="delete-btn"
+                onclick="deleteVideo(event, ${i})"
+              >
+                Delete
+              </button>
 
             </div>
 
           </div>
 
-        `).join("");
-    }
+        </div>
 
-    function openModal() {
-
-      document.getElementById("videoTitle").value = "";
-      document.getElementById("videoUrl").value = "";
-
-      document.getElementById("modalOverlay")
-        .style.display = "flex";
-    }
-
-    function closeModal() {
-
-      document.getElementById("modalOverlay")
-        .style.display = "none";
+      `).join("");
     }
 
     function saveVideo() {
@@ -584,65 +473,105 @@
           .value.trim();
 
       if (!title || !rawUrl) {
-        return alert("Rendoo mandatory!");
+
+        alert(
+          "Title and URL rendu enter chey bro!"
+        );
+
+        return;
       }
 
-      const vidId =
+      const id =
         extractVideoId(rawUrl);
 
-      const finalUrl =
-        vidId
-          ? `https://www.youtube.com/watch?v=${vidId}`
+      const url =
+        id
+          ? `https://www.youtube.com/watch?v=${id}`
           : rawUrl;
 
       const thumb =
-        vidId
-          ? `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`
-          : "";
+        id
+          ? `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+          : "https://via.placeholder.com/320x180?text=No+Thumbnail";
 
-      memoryVideos.unshift({
+      const videos =
+        loadVideos();
+
+      videos.unshift({
         title,
-        url: finalUrl,
+        url,
         thumb
       });
 
-      saveToEncryptedStorage();
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(videos)
+      );
 
       closeModal();
+
+      render();
     }
 
-    function deleteVideo(e, idx) {
+    function deleteVideo(e, index) {
 
       e.stopPropagation();
 
-      if (confirm("Remove this video?")) {
+      if (confirm("Ee video delete cheyala?")) {
 
-        memoryVideos.splice(idx, 1);
+        const videos =
+          loadVideos();
 
-        saveToEncryptedStorage();
+        videos.splice(index, 1);
+
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(videos)
+        );
+
+        render();
       }
+    }
+
+    function openModal() {
+
+      document.getElementById("videoTitle")
+        .value = "";
+
+      document.getElementById("videoUrl")
+        .value = "";
+
+      document.getElementById("modalOverlay")
+        .style.display = "flex";
+    }
+
+    function closeModal() {
+
+      document.getElementById("modalOverlay")
+        .style.display = "none";
     }
 
     function exportData() {
 
-      const cipher =
-        localStorage.getItem(STORAGE_KEY) || "";
+      const data =
+        localStorage.getItem(STORAGE_KEY) || "[]";
 
-      const dl =
+      const blob =
+        new Blob(
+          [data],
+          { type: "application/json" }
+        );
+
+      const a =
         document.createElement("a");
 
-      dl.setAttribute(
-        "href",
-        "data:text/plain;charset=utf-8," +
-        encodeURIComponent(cipher)
-      );
+      a.href =
+        URL.createObjectURL(blob);
 
-      dl.setAttribute(
-        "download",
-        "myflix_encrypted_vault.txt"
-      );
+      a.download =
+        "myflix_videos.json";
 
-      dl.click();
+      a.click();
     }
 
     function importData() {
@@ -651,43 +580,62 @@
         document.createElement("input");
 
       input.type = "file";
+      input.accept = ".json";
 
       input.onchange = (e) => {
+
+        const file =
+          e.target.files[0];
 
         const reader =
           new FileReader();
 
-        reader.onload = (ev) => {
+        reader.onload = (event) => {
 
-          localStorage.setItem(
-            STORAGE_KEY,
-            ev.target.result.trim()
-          );
+          try {
 
-          alert(
-            "Backup uploaded! Unlock chey active key tho."
-          );
+            JSON.parse(
+              event.target.result
+            );
 
-          lockVault();
+            localStorage.setItem(
+              STORAGE_KEY,
+              event.target.result
+            );
+
+            render();
+
+            alert(
+              "Backup restored successfully!"
+            );
+
+          } catch(err) {
+
+            alert(
+              "Invalid JSON file!"
+            );
+          }
         };
 
-        reader.readAsText(
-          e.target.files[0]
-        );
+        reader.readAsText(file);
       };
 
       input.click();
     }
 
     document
-      .getElementById("passkeyInput")
-      .addEventListener("keypress", (e) => {
+      .getElementById("modalOverlay")
+      .addEventListener("click", (e) => {
 
-        if (e.key === "Enter") {
-          unlockVault();
+        if (
+          e.target.id === "modalOverlay"
+        ) {
+          closeModal();
         }
 
       });
+
+    render();
 
   </script>
 
