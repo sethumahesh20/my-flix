@@ -63,19 +63,9 @@
       transition: all 0.2s;
     }
 
-    .btn-primary {
-      background: var(--accent-red);
-      color: #fff;
-    }
-
-    .btn-primary:hover {
-      background: #b80710;
-    }
-
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.12);
-      color: #fff;
-    }
+    .btn-primary { background: var(--accent-red); color: #fff; }
+    .btn-primary:hover { background: #b80710; }
+    .btn-secondary { background: rgba(255, 255, 255, 0.12); color: #fff; }
 
     .container {
       padding: 30px;
@@ -179,6 +169,7 @@
       text-decoration: underline;
     }
 
+    /* Modals */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -197,17 +188,8 @@
       border-radius: 8px;
     }
 
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 12px;
-      color: var(--text-gray);
-      margin-bottom: 6px;
-    }
-
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; color: var(--text-gray); margin-bottom: 6px; }
     .form-group input {
       width: 100%;
       padding: 10px;
@@ -217,17 +199,8 @@
       border-radius: 4px;
     }
 
-    .form-group input:focus {
-      border-color: var(--accent-red);
-      outline: none;
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 18px;
-    }
+    .form-group input:focus { border-color: var(--accent-red); outline: none; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 
     .status-msg {
       text-align: center;
@@ -237,12 +210,10 @@
     }
   </style>
 </head>
-
 <body>
 
   <header>
     <div class="brand">MYFLIX</div>
-
     <div class="header-actions">
       <button class="btn btn-secondary" onclick="openTokenModal()">🔑 Key</button>
       <button class="btn btn-primary" onclick="openModal()">+ Add Video</button>
@@ -250,133 +221,53 @@
   </header>
 
   <main class="container">
-
     <div class="section-title">
       <span>Personal Unlisted Vault</span>
-      <span
-        id="videoCount"
-        style="font-size: 13px; color: var(--text-gray);"
-      >
-        Syncing...
-      </span>
+      <span id="videoCount" style="font-size: 13px; color: var(--text-gray);">Syncing...</span>
     </div>
-
     <div class="video-grid" id="videoGrid">
-      <div class="status-msg">
-        Loading videos from GitHub...
-      </div>
+      <div class="status-msg">Loading videos from GitHub...</div>
     </div>
-
   </main>
 
+  <!-- Add Video Modal -->
   <div class="modal-overlay" id="modalOverlay">
-
     <div class="modal-box">
-
-      <h3 style="margin-bottom: 16px;">
-        Add New Video
-      </h3>
-
+      <h3 style="margin-bottom: 16px;">Add New Video</h3>
       <div class="form-group">
         <label>Video Title</label>
-
-        <input
-          type="text"
-          id="videoTitle"
-          placeholder="e.g. Unlisted Travel Clip"
-        />
+        <input type="text" id="videoTitle" placeholder="e.g. Unlisted Travel Clip" />
       </div>
-
       <div class="form-group">
         <label>YouTube Link</label>
-
-        <input
-          type="text"
-          id="videoUrl"
-          placeholder="https://youtu.be/..."
-        />
+        <input type="text" id="videoUrl" placeholder="https://youtu.be/..." />
       </div>
-
       <div class="modal-actions">
-
-        <button
-          class="btn btn-secondary"
-          onclick="closeModal()"
-        >
-          Cancel
-        </button>
-
-        <button
-          class="btn btn-primary"
-          id="saveBtn"
-          onclick="saveVideo()"
-        >
-          Save to Cloud
-        </button>
-
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn" onclick="saveVideo()">Save to Cloud</button>
       </div>
-
     </div>
-
   </div>
 
+  <!-- Token Setup Modal -->
   <div class="modal-overlay" id="tokenModal">
-
     <div class="modal-box">
-
-      <h3 style="margin-bottom: 8px;">
-        GitHub Access Key
-      </h3>
-
-      <p
-        style="
-          font-size: 12px;
-          color: var(--text-gray);
-          margin-bottom: 14px;
-        "
-      >
-        Videos add/delete cheyadaniki nee Personal Access Token ikkada paste chey.
-        Idi ee device browser lone save untundi.
+      <h3 style="margin-bottom: 8px;">GitHub Access Key</h3>
+      <p style="font-size: 12px; color: var(--text-gray); margin-bottom: 14px;">
+        Videos add/delete cheyadaniki nee Personal Access Token ikkada paste chey. Idi ee device browser lone save untundi.
       </p>
-
       <div class="form-group">
-
-        <label>
-          Personal Access Token (ghp_...)
-        </label>
-
-        <input
-          type="password"
-          id="tokenInput"
-          placeholder="ghp_xxxxxxxxx"
-        />
-
+        <label>Personal Access Token (ghp_...)</label>
+        <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxx" />
       </div>
-
       <div class="modal-actions">
-
-        <button
-          class="btn btn-secondary"
-          onclick="closeTokenModal()"
-        >
-          Cancel
-        </button>
-
-        <button
-          class="btn btn-primary"
-          onclick="saveToken()"
-        >
-          Save Key
-        </button>
-
+        <button class="btn btn-secondary" onclick="closeTokenModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveToken()">Save Key</button>
       </div>
-
     </div>
-
   </div>
 
   <script>
-
     const GITHUB_USER = "sethumahesh20";
     const GITHUB_REPO = "my-flix";
     const FILE_PATH = "videos.json";
@@ -389,394 +280,156 @@
     }
 
     function extractVideoId(url) {
-
-      const match = url.trim().match(
-        /^.*(youtu.be\/|v\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-      );
-
-      return (
-        match &&
-        match[2].length === 11
-      )
-        ? match[2]
-        : null;
+      const match = url.trim().match(/^.*(youtu.be\/|v\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+      return (match && match[2].length === 11) ? match[2] : null;
     }
 
     async function fetchVideos() {
-
-      const grid =
-        document.getElementById("videoGrid");
-
+      const grid = document.getElementById("videoGrid");
       try {
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}?t=${Date.now()}`, {
+          headers: getToken() ? { "Authorization": `Bearer ${getToken()}` } : {}
+        });
 
-        const res = await fetch(
-          `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}?t=${Date.now()}`,
-          {
-            headers: getToken()
-              ? {
-                  "Authorization":
-                    `Bearer ${getToken()}`
-                }
-              : {}
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error("Fetch failed");
-        }
+        if (!res.ok) throw new Error("Fetch failed");
 
         const data = await res.json();
-
         fileSha = data.sha;
-
-        const decoded =
-          decodeURIComponent(
-            escape(atob(data.content))
-          );
-
-        cachedVideos =
-          JSON.parse(decoded || "[]");
-
+        const decoded = decodeURIComponent(escape(atob(data.content)));
+        cachedVideos = JSON.parse(decoded || "[]");
         render();
-
       } catch (err) {
-
-        grid.innerHTML = `
-          <div class="status-msg">
-            Videos load avvatledu bro.
-            File create chesava check chesko
-            leda 🔑 Key button kotti token enter chey.
-          </div>
-        `;
+        grid.innerHTML = `<div class="status-msg">Videos load avvatledu bro. File create chesava check chesko leda 🔑 Key button kotti token enter chey.</div>`;
       }
     }
 
     function render() {
-
-      const grid =
-        document.getElementById("videoGrid");
-
-      document.getElementById("videoCount")
-        .innerText =
-        `${cachedVideos.length} Videos`;
+      const grid = document.getElementById("videoGrid");
+      document.getElementById("videoCount").innerText = `${cachedVideos.length} Videos`;
 
       if (cachedVideos.length === 0) {
-
-        grid.innerHTML = `
-          <div class="status-msg">
-            No videos found.
-            Click <b>+ Add Video</b>
-            to add your first unlisted stream.
-          </div>
-        `;
-
+        grid.innerHTML = `<div class="status-msg">No videos found. Click <b>+ Add Video</b> to add your first unlisted stream.</div>`;
         return;
       }
 
-      grid.innerHTML =
-        cachedVideos.map((v, i) => `
-
-          <div
-            class="card"
-            onclick="window.open('${v.url}', '_blank')"
-          >
-
-            <div class="thumbnail-wrap">
-
-              <img
-                src="${v.thumb}"
-                alt="${v.title}"
-              />
-
-              <div class="play-overlay">
-                ▶
-              </div>
-
-            </div>
-
-            <div class="card-info">
-
-              <div
-                class="card-title"
-                title="${v.title}"
-              >
-                ${v.title}
-              </div>
-
-              <div class="card-meta">
-
-                <span>
-                  Unlisted
-                </span>
-
-                <button
-                  class="delete-btn"
-                  onclick="deleteVideo(event, ${i})"
-                >
-                  Delete
-                </button>
-
-              </div>
-
-            </div>
-
+      grid.innerHTML = cachedVideos.map((v, i) => `
+        <div class="card" onclick="window.open('${v.url}', '_blank')">
+          <div class="thumbnail-wrap">
+            <img src="${v.thumb}" alt="${v.title}" />
+            <div class="play-overlay">▶</div>
           </div>
-
-        `).join("");
+          <div class="card-info">
+            <div class="card-title" title="${v.title}">${v.title}</div>
+            <div class="card-meta">
+              <span>Unlisted</span>
+              <button class="delete-btn" onclick="deleteVideo(event, ${i})">Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
     }
 
-    async function pushToGitHub(
-      newVideos,
-      commitMsg
-    ) {
-
+    async function pushToGitHub(newVideos, commitMsg) {
       const token = getToken();
-
       if (!token) {
-
         openTokenModal();
-
-        throw new Error(
-          "Token missing"
-        );
+        throw new Error("Token missing");
       }
 
-      const content =
-        btoa(
-          unescape(
-            encodeURIComponent(
-              JSON.stringify(
-                newVideos,
-                null,
-                2
-              )
-            )
-          )
-        );
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(newVideos, null, 2))));
+      const res = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: commitMsg,
+          content: content,
+          sha: fileSha
+        })
+      });
 
-      const res = await fetch(
-        `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`,
-        {
-          method: "PUT",
-
-          headers: {
-            "Authorization":
-              `Bearer ${token}`,
-
-            "Content-Type":
-              "application/json"
-          },
-
-          body: JSON.stringify({
-            message: commitMsg,
-            content: content,
-            sha: fileSha
-          })
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error(
-          "Update failed"
-        );
-      }
-
-      const respData =
-        await res.json();
-
-      fileSha =
-        respData.content.sha;
-
-      cachedVideos =
-        newVideos;
-
+      if (!res.ok) throw new Error("Update failed");
+      const respData = await res.json();
+      fileSha = respData.content.sha;
+      cachedVideos = newVideos;
       render();
     }
 
     async function saveVideo() {
+      const title = document.getElementById("videoTitle").value.trim();
+      const rawUrl = document.getElementById("videoUrl").value.trim();
+      const saveBtn = document.getElementById("saveBtn");
 
-      const title =
-        document.getElementById(
-          "videoTitle"
-        ).value.trim();
+      if (!title || !rawUrl) return alert("Title & URL rendu enter chey bro!");
+      if (!getToken()) return openTokenModal();
 
-      const rawUrl =
-        document.getElementById(
-          "videoUrl"
-        ).value.trim();
+      const id = extractVideoId(rawUrl);
+      const url = id ? `https://www.youtube.com/watch?v=${id}` : rawUrl;
+      const thumb = id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "https://via.placeholder.com/320x180?text=No+Thumbnail";
 
-      const saveBtn =
-        document.getElementById(
-          "saveBtn"
-        );
+      saveBtn.innerText = "Saving...";
+      saveBtn.disabled = true;
 
-      if (!title || !rawUrl) {
-
-        return alert(
-          "Title & URL rendu enter chey bro!"
-        );
-      }
-
-      if (!getToken()) {
-
-        return openTokenModal();
-      }
-
-      const id =
-        extractVideoId(rawUrl);
-
-      const url =
-        id
-          ? `https://www.youtube.com/watch?v=${id}`
-          : rawUrl;
-
-      const thumb =
-        id
-          ? `https://img.youtube.com/vi/${id}/hqdefault.jpg`
-          : "https://via.placeholder.com/320x180?text=No+Thumbnail";
-
-      saveBtn.innerText =
-        "Saving...";
-
-      saveBtn.disabled =
-        true;
-
-      const updated = [
-        {
-          title,
-          url,
-          thumb
-        },
-        ...cachedVideos
-      ];
+      const updated = [{ title, url, thumb }, ...cachedVideos];
 
       try {
-
-        await pushToGitHub(
-          updated,
-          `Add video: ${title}`
-        );
-
+        await pushToGitHub(updated, `Add video: ${title}`);
         closeModal();
-
       } catch (e) {
-
-        alert(
-          "Upload error! Token permissions check chesko bro."
-        );
-
+        alert("Upload error! Token permissions check chesko bro.");
       } finally {
-
-        saveBtn.innerText =
-          "Save to Cloud";
-
-        saveBtn.disabled =
-          false;
+        saveBtn.innerText = "Save to Cloud";
+        saveBtn.disabled = false;
       }
     }
 
-    async function deleteVideo(
-      e,
-      idx
-    ) {
-
+    async function deleteVideo(e, idx) {
       e.stopPropagation();
+      if (!getToken()) return openTokenModal();
 
-      if (!getToken()) {
-        return openTokenModal();
-      }
-
-      if (
-        confirm(
-          "Ee video GitHub nunchi remove cheyala?"
-        )
-      ) {
-
-        const updated =
-          [...cachedVideos];
-
-        const removed =
-          updated.splice(idx, 1);
-
+      if (confirm("Ee video GitHub nunchi remove cheyala?")) {
+        const updated = [...cachedVideos];
+        const removed = updated.splice(idx, 1);
         try {
-
-          await pushToGitHub(
-            updated,
-            `Delete video: ${removed[0].title}`
-          );
-
+          await pushToGitHub(updated, `Delete video: ${removed[0].title}`);
         } catch (e) {
-
-          alert(
-            "Delete fail aindi! Token correct ga unda?"
-          );
+          alert("Delete fail aindi! Token correct ga unda?");
         }
       }
     }
 
     function openModal() {
-
-      document.getElementById(
-        "videoTitle"
-      ).value = "";
-
-      document.getElementById(
-        "videoUrl"
-      ).value = "";
-
-      document.getElementById(
-        "modalOverlay"
-      ).style.display = "flex";
+      document.getElementById("videoTitle").value = "";
+      document.getElementById("videoUrl").value = "";
+      document.getElementById("modalOverlay").style.display = "flex";
     }
 
     function closeModal() {
-
-      document.getElementById(
-        "modalOverlay"
-      ).style.display = "none";
+      document.getElementById("modalOverlay").style.display = "none";
     }
 
     function openTokenModal() {
-
-      document.getElementById(
-        "tokenInput"
-      ).value = getToken();
-
-      document.getElementById(
-        "tokenModal"
-      ).style.display = "flex";
+      document.getElementById("tokenInput").value = getToken();
+      document.getElementById("tokenModal").style.display = "flex";
     }
 
     function closeTokenModal() {
-
-      document.getElementById(
-        "tokenModal"
-      ).style.display = "none";
+      document.getElementById("tokenModal").style.display = "none";
     }
 
     function saveToken() {
-
-      const token =
-        document.getElementById(
-          "tokenInput"
-        ).value.trim();
-
+      const token = document.getElementById("tokenInput").value.trim();
       if (token) {
-
-        localStorage.setItem(
-          "myflix_gh_pat",
-          token
-        );
-
+        localStorage.setItem("myflix_gh_pat", token);
         closeTokenModal();
-
         fetchVideos();
       }
     }
 
+    // Auto-fetch on load
     fetchVideos();
-
   </script>
-
 </body>
 </html>
